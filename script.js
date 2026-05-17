@@ -1,3 +1,125 @@
+// ==============================
+// INTRO SLIDESHOW
+// ==============================
+let currentSlide = 0;
+const totalSlides = 5;
+
+function changeSlide(dir) {
+  goSlide(currentSlide + dir);
+}
+
+function goSlide(n) {
+  const slides = document.querySelectorAll('.intro-slide');
+  const dots = document.querySelectorAll('.dot-ind');
+  if (!slides.length) return;
+
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (n + totalSlides) % totalSlides;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+}
+
+// Auto-advance every 4 seconds
+function startSlideAuto() {
+  setInterval(() => changeSlide(1), 4000);
+}
+
+// ==============================
+// HERO CANVAS — Particle field
+// ==============================
+function initHeroCanvas() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Create particles
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.3,
+      dx: (Math.random() - 0.5) * 0.4,
+      dy: (Math.random() - 0.5) * 0.4,
+      color: Math.random() > 0.5 ? '56,217,245' : '168,85,247'
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.dx; p.y += p.dy;
+      if (p.x < 0 || p.x > W) p.dx *= -1;
+      if (p.y < 0 || p.y > H) p.dy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},0.7)`;
+      ctx.fill();
+    });
+
+    // Draw connecting lines between nearby particles
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 100) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(56,217,245,${0.12 * (1 - dist/100)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ==============================
+// TYPING ANIMATION
+// ==============================
+function initTyping() {
+  const el = document.getElementById('typed-text');
+  if (!el) return;
+  const words = ['websites.', 'IoT systems.', 'cool things.', 'the future.'];
+  let wi = 0, ci = 0, deleting = false;
+
+  function type() {
+    const word = words[wi];
+    if (!deleting) {
+      el.textContent = word.slice(0, ++ci);
+      if (ci === word.length) {
+        deleting = true;
+        setTimeout(type, 1600); // pause at full word
+        return;
+      }
+      setTimeout(type, 90);
+    } else {
+      el.textContent = word.slice(0, --ci);
+      if (ci === 0) {
+        deleting = false;
+        wi = (wi + 1) % words.length;
+        setTimeout(type, 400);
+        return;
+      }
+      setTimeout(type, 45);
+    }
+  }
+  type();
+}
+
 function goTo(id) {
   document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
 }
@@ -15,6 +137,8 @@ function enterSite() {
     }, 100);
     initScrollReveal();
     initNavScroll();
+    initTyping();
+    startSlideAuto();
   }, 700);
 }
 
